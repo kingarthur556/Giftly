@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Giftly: участник</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Экран участника торгов. Тёмно-синий фон от основного цвета референса (#2B41DC); оранжевый градиент для названия, кнопок и последних секунд */
+  --navy:#0C1445;
+  --navy-deep:#070C2B;
+  --blue:#2B41DC;
+  --paper:#F3F5FF;
+  --ink:#080D2E;
+  --orange:#FF8A2A;
+  --grad:linear-gradient(120deg,#FFB547 0%,#FF8A2A 48%,#FF5A1F 100%);
+  --muted:#A9B3E6;
+  --line:rgba(243,245,255,.16);
+  --font-brand:"Manrope","Segoe UI",system-ui,sans-serif;
+  --font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
+  /* Раскладка: без карточек; слева подарок, цена, время и кнопка ставки, справа лента ставок; на телефоне одна колонка */
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;background:radial-gradient(900px 560px at 16% 0%,rgba(43,65,220,.62),rgba(43,65,220,0) 72%) no-repeat,var(--navy);color:var(--paper);font:400 16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+p{margin:0}
+:focus-visible{outline:2px solid var(--paper);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:28px}
+
+/* шапка */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
+.brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand h1{font:800 36px/1.1 var(--font-brand);letter-spacing:-.06em;margin:0;padding-right:.08em;color:var(--orange);background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.viewers{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.balance{background:rgba(243,245,255,.1);border-radius:12px;padding:8px 16px;font-weight:700;font-size:18px;line-height:1.3;font-variant-numeric:tabular-nums}
+
+/* зал */
+.hall{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:start}
+.stage{display:flex;flex-direction:column;gap:22px}
+.lot{display:grid;grid-template-columns:190px minmax(0,1fr);gap:24px;align-items:center}
+/* карточка подарка: вырезана из скриншота целиком, цена в плашке наша */
+.art{position:relative;aspect-ratio:230/270;container-type:inline-size}
+.art img{width:100%;height:100%;display:block}
+.art .pill{position:absolute;left:14%;right:14%;top:73.5%;height:19%;border-radius:999px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:600;font-size:9.5cqw;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.art .pill.sold{background:var(--grad);color:var(--ink)}
+.info{display:flex;flex-direction:column;gap:16px}
+.lot h2{font-weight:700;font-size:clamp(28px,5vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.facts{margin:0;display:flex;flex-wrap:wrap;gap:8px 32px}
+.facts dt{color:var(--muted);font-size:14px}
+.facts dd{margin:0;font-weight:700;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums}
+
+.price{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.price small{display:block;color:var(--muted);font-size:14px;line-height:1.2}
+.price strong{display:block;font-weight:700;font-size:clamp(56px,12vw,96px);line-height:.92;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.price .unit{font-size:.3em;letter-spacing:0;margin-left:.35em;color:var(--muted)}
+
+.clock{font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.clock.hot{color:var(--orange)}
+
+.action{min-height:60px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* все кнопки оранжевые */
+.btn{appearance:none;border:0;background:var(--grad);color:var(--ink);border-radius:12px;min-height:48px;padding:10px 18px;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.big{min-height:60px;padding:14px 32px;font-size:20px;font-weight:700;border-radius:16px}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.note{color:var(--muted);font-size:14px}
+
+/* лента ставок: без карточки, отделена линией */
+.side{display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--line);padding-left:32px;min-height:200px}
+h3{font-weight:700;font-size:22px;line-height:1.2;margin:0}
+.bids{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.bids li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 0}
+.bids .no{font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+.bids .who{color:var(--muted);overflow-wrap:anywhere}
+/* ведущая ставка целиком оранжевая */
+.bids li.lead .no,.bids li.lead .who,.bids li.lead .sum{color:var(--orange)}
+.bids .sum{font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+/* окно оффера победителю: синее, в цвет фона */
+dialog{border:1px solid rgba(243,245,255,.22);padding:0;border-radius:24px;background:linear-gradient(160deg,var(--blue) 0%,var(--navy) 70%);color:var(--paper);width:min(420px,calc(100% - 32px));box-shadow:0 24px 80px rgba(3,6,24,.6)}
+dialog::backdrop{background:rgba(3,6,24,.72)}
+.offer{display:flex;flex-direction:column;gap:12px;padding:28px 24px 24px;text-align:center}
+.offer p{font-size:18px;line-height:1.4;text-wrap:balance}
+.offer .row{justify-content:center;margin-top:8px}
+.offer .btn{flex:1 1 140px}
+
+@media (max-width:860px){
+  .hall{grid-template-columns:minmax(0,1fr);gap:24px}
+  .side{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:24px;min-height:0}
+}
+@media (max-width:480px){
+  .lot{grid-template-columns:132px minmax(0,1fr);gap:16px}
+  .btn.big{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+/* разделы без карточек, отделены линиями */
+.side{gap:24px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec:empty{display:none}
+.side .sec:not(:empty) ~ .sec,.sec.split{border-top:1px solid var(--line);padding-top:24px}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.accent{color:var(--orange);font-weight:700;font-variant-numeric:tabular-nums}
+.cands{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.cands li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:40px}
+.cands .no{font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+.cands .pct{display:block;text-align:right;font-size:14px;font-variant-numeric:tabular-nums}
+.meter{height:8px;margin-top:4px;border-radius:4px;background:rgba(243,245,255,.14);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:4px;background:rgba(243,245,255,.6);transition:width .4s}
+/* шкала того, за кого проголосовал зритель, оранжевая; у победителя шкала крупнее */
+.cands li.mine .meter i{background:var(--grad)}
+.cands li.mine .pct{color:var(--orange);font-weight:600}
+.cands li.mine .no{color:var(--orange)}
+.cands li.win .meter{height:18px;border-radius:9px}
+.cands li.win .meter i{border-radius:9px}
+.btn.small{min-height:40px;padding:6px 14px;font-size:14px}
+.tag{font-size:12px;line-height:1.4;color:var(--orange);border:1px solid currentColor;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.people{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.people li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:8px 0}
+.people .no{font-weight:700;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+.people .who{color:var(--muted)}
+.people .sum{font-variant-numeric:tabular-nums}
+.action{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media (max-width:480px){.action .btn.big{flex:1 1 140px;width:auto}}
+
+.field{width:100%;min-height:52px;border-radius:14px;border:1px solid var(--line);background:rgba(243,245,255,.1);color:var(--paper);padding:10px 16px;font:inherit;font-size:18px;text-align:center}
+.field::placeholder{color:var(--muted)}
+.balance[hidden]{display:none}
+.action:empty{display:none}
+
+/* ===== v2: вебки, кошелёк, Telegram ===== */
+.wrap{max-width:1320px}
+/* зал: видео | лот | ставки; на узком экране одна колонка */
+.hall{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.75fr);grid-template-areas:"cams stage side";gap:40px}
+.cams{grid-area:cams}
+.stage{grid-area:stage}
+.side{grid-area:side}
+@media (max-width:1180px){
+  .hall{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"cams stage" "cams side"}
+  .side{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:24px;min-height:0}
+}
+@media (max-width:860px){
+  .hall{grid-template-columns:minmax(0,1fr);grid-template-areas:"cams" "stage" "side"}
+}
+
+/* вебки: два лидера по ставкам, каждая 16:9 */
+.cams{display:flex;flex-direction:column;gap:10px}
+.cams2{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.cam{position:relative;overflow:hidden;border-radius:18px;aspect-ratio:16/9;margin:0;
+  background:radial-gradient(120% 120% at 30% 0%,rgba(43,65,220,.55),rgba(7,12,43,.9) 70%),var(--navy-deep)}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
+.cam.on video{opacity:1}
+/* без видео: размытое фото на фоне и аватар по центру */
+.cam .ph{position:absolute;inset:0;display:grid;place-items:center}
+.cam .bg{position:absolute;inset:-20px;background:center/cover no-repeat;filter:blur(18px) brightness(.45)}
+.cam .ava{position:relative;width:clamp(64px,22vw,112px);height:clamp(64px,22vw,112px);border-radius:50%;display:grid;place-items:center;
+  background:center/cover no-repeat,linear-gradient(140deg,#2B41DC,#151F66);font:800 clamp(28px,8vw,52px)/1 var(--font-brand);color:var(--paper)}
+.cam.on .ph,.cam.empty .ph,.cam.empty .cap{display:none}
+.cam .cap{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:baseline;gap:10px;padding:28px 14px 12px;
+  background:linear-gradient(rgba(3,6,24,0),rgba(3,6,24,.85));font-size:15px}
+.cam .rank{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.cam .who{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--paper)}
+.cam .sum{font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cam.lead{box-shadow:inset 0 0 0 3px var(--orange)}
+.cam.lead .sum,.cam.lead .rank{color:var(--orange)}
+/* пока никто не поставил или эфир не объявлен */
+.cam .wait{position:absolute;inset:0;display:none;place-items:center;color:var(--muted);font-weight:600;font-size:18px}
+.cam.empty .wait{display:flex;align-items:center;justify-content:center}
+.cam .dots::after{content:"...";display:inline-block;width:1em;text-align:left;animation:dots 1.4s steps(4,end) infinite;overflow:hidden;vertical-align:bottom}
+@keyframes dots{0%{width:0}100%{width:1em}}
+@media (prefers-reduced-motion:reduce){.cam .dots::after{animation:none}}
+.cam-status:empty{display:none}
+.chip.onair::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--orange)}
+
+/* кошелёк и профиль */
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(243,245,255,.08);font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:hover{background:rgba(243,245,255,.14)}
+.top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.me{display:flex;align-items:center;gap:12px;justify-content:center}
+.ava{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--navy-deep);display:grid;place-items:center;font:800 22px/1 var(--font-brand);color:var(--muted);flex:none}
+.me strong{font-size:20px}
+.check{display:flex;align-items:flex-start;gap:10px;text-align:left;font-size:15px;color:var(--paper);cursor:pointer}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange);flex:none}
+.offer .btn.ghost,.btn.ghost{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 1.5px var(--line)}
+.status{font-size:15px;color:var(--muted);min-height:1.5em}
+.status.good{color:var(--paper)}
+.code{font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums}
+
+/* кнопка ставки у участника на телефоне всегда внизу */
+@media (max-width:860px){
+  body.player{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  body.player .action{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(12,20,69,0),var(--navy) 28%);justify-content:center}
+  body.player .action .btn.big{flex:1 1 auto;max-width:520px}
+  .lot{grid-template-columns:104px minmax(0,1fr);gap:16px}
+  .lot h2{font-size:28px}
+  .facts dd{font-size:18px}
+  .price strong{font-size:56px}
+}
+
+/* табло ведущего */
+.board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.board li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.board li:last-child{border-bottom:0}
+.board .who{color:var(--muted);font-size:14px}
+.board .sum{font-weight:700;font-variant-numeric:tabular-nums}
+.board .st{font-size:14px}
+.board .st.ok{color:var(--orange);font-weight:600}
+.board a{color:inherit}
+.field.addr{font-size:14px;text-align:left}
+
+/* подсказка об ошибке */
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;pointer-events:none;z-index:20;max-width:min(440px,calc(100% - 32px));background:var(--paper);color:var(--ink);font-weight:600;padding:12px 18px;border-radius:14px;box-shadow:0 12px 40px rgba(3,6,24,.5);transition:opacity .2s,transform .2s;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+/* кнопка ставки внизу экрана: недоступная — спокойная плашка, без просвечивания */
+@media (max-width:860px){
+  body.player .action .btn.big:disabled{opacity:1;background:#1B2560;color:var(--muted)}
+}
+#wallet-panel p{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+
+/* полоска демо-режима */
+.demo-bar{margin:0;padding:10px 16px;text-align:center;font-size:14px;font-weight:600;background:rgba(255,138,42,.16);color:var(--paper);border-bottom:1px solid rgba(255,138,42,.4)}
+
+/* кнопка правил и окно правил */
+.info-btn{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;border:0;background:rgba(243,245,255,.08);color:var(--paper);cursor:pointer;padding:0}
+.info-btn:hover{background:rgba(243,245,255,.16)}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;text-align:left;font-size:15px;line-height:1.45;color:var(--muted)}
+.rules b{color:var(--paper)}
+
+[hidden]{display:none !important}
+
+/* баланс в правом верхнем углу и окно пополнения */
+.chip.accent{background:var(--grad);color:var(--ink);border-color:transparent}
+.chip .plus{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--grad);color:var(--ink);font-weight:800;line-height:1}
+.offer .bal{font:800 40px/1.1 var(--font-brand);margin:0;font-variant-numeric:tabular-nums}
+.amount{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:14px;color:var(--muted)}
+.amount-field{display:flex;align-items:center;gap:8px;border-radius:14px;background:rgba(243,245,255,.08);border:1px solid var(--line);padding:0 14px}
+.amount-field input{flex:1;min-width:0;background:transparent;border:0;color:var(--paper);font:700 24px/1 inherit;padding:12px 0;outline:none;font-variant-numeric:tabular-nums}
+.amount-field:focus-within{border-color:var(--orange)}
+.amount-field b{color:var(--muted)}
+.row.quick{justify-content:flex-start}
+.row.quick .chip{min-width:56px;justify-content:center}
+.nowrap{white-space:nowrap}
+
+/* до старта: вместо лота только «In progress…» */
+.lot-wait{grid-column:1/-1;margin:0;padding:40px 0;text-align:center;font-weight:600;font-size:22px;color:var(--muted)}
+.lot-wait .dots::after{content:"...";display:inline-block;width:1em;text-align:left;animation:dots 1.4s steps(4,end) infinite;overflow:hidden;vertical-align:bottom}
+@media (prefers-reduced-motion:reduce){.lot-wait .dots::after{animation:none}}
+/* ведущий: выбор подарка */
+.picker{display:flex;flex-wrap:wrap;gap:10px;width:100%}
+.pick{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:14px;border:1.5px solid var(--line);background:rgba(243,245,255,.06);color:var(--paper);font-weight:600;cursor:pointer}
+.pick img{width:40px;height:40px;border-radius:10px;object-fit:cover}
+.pick.on{border-color:var(--orange);background:rgba(255,138,42,.14)}
+
+/* подарки у ведущего */
+.gift{width:56%;height:56%;color:var(--muted)}
+.art .gift{display:block;margin:auto;position:relative;top:22%}
+.gifts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gift-card{position:relative;display:flex;flex-direction:column;gap:6px}
+.gift-pick{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;padding:10px;border-radius:16px;
+  border:1.5px solid var(--line);background:rgba(243,245,255,.05);color:var(--paper);text-align:left;cursor:pointer;font:inherit}
+.gift-pick:disabled{cursor:default}
+.gift-card.on .gift-pick{border-color:var(--orange);background:rgba(255,138,42,.12)}
+.gift-card.done .gift-pick{opacity:.55}
+.gift-art{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--navy-deep)}
+.gift-art img{width:100%;height:100%;object-fit:cover}
+.gift-art.plus{font:800 44px/1 var(--font-brand);color:var(--muted);border:1.5px dashed var(--line);background:transparent}
+.gift-name{font-weight:700;line-height:1.2}
+.gift-meta{font-size:13px;color:var(--muted);line-height:1.35}
+.gift-tag{position:absolute;top:16px;left:16px;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--orange);color:var(--ink)}
+.gift-card.done .gift-tag{background:rgba(243,245,255,.85)}
+.gift-edit{align-self:flex-start}
+.gift-card.add .gift-pick{border-style:dashed;height:100%}
+/* редактор подарка */
+dialog .lot-form{gap:14px}
+.photo{display:grid;place-items:center;align-content:center;gap:6px;width:150px;aspect-ratio:1;margin:0 auto;border-radius:20px;
+  border:1.5px dashed var(--line);background:rgba(243,245,255,.06);color:var(--muted);cursor:pointer;overflow:hidden;position:relative;font:inherit}
+.photo:hover{border-color:var(--orange)}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo .plus{font:800 48px/1 var(--font-brand)}
+.photo img + .photo-hint{position:absolute;left:0;right:0;bottom:0;padding:6px;background:rgba(3,6,24,.7);color:var(--paper);font-size:13px}
+.photo-hint{font-size:14px;font-weight:600}
+.fld{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:14px;color:var(--muted);flex:1;min-width:0}
+.fld input,.fld select{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid var(--line);background:rgba(243,245,255,.08);color:var(--paper);
+  font:600 16px/1.2 inherit;padding:12px 14px;outline:none;color-scheme:dark}
+.fld input:focus,.fld select:focus{border-color:var(--orange)}
+.fld small{font-size:12px;color:var(--muted)}
+.fld-row{display:flex;gap:12px}
+@media (max-width:520px){.fld-row{flex-direction:column}}
+
+.keyform{width:100%;max-width:420px}
+.keyform .field{flex:1;min-width:0}
+
+</style>
+</head>
+<body class="player">
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Giftly.</h1>
+      <span class="viewers" aria-label="Сейчас в эфире"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span id="viewers">1</span></span>
+    </div>
+    <div class="top-right">
+      <span class="chip onair" id="onair" hidden>Вы в эфире</span>
+      <button class="chip" id="wallet-chip" data-act="wallet" hidden></button>
+    </div>
+  </header>
+  <main class="hall">
+    <section class="cams" aria-label="Вебки лидеров">
+      <ol class="cams2" id="cams"></ol>
+      <p class="note cam-status" id="cam-status"></p>
+    </section>
+    <section class="stage" aria-labelledby="lot-name">
+      <div class="lot" id="lot"></div>
+      <div class="price" id="price"></div>
+      <time class="clock" id="clock" aria-label="Осталось времени">0:30</time>
+      <div class="action" id="action" tabindex="-1"></div>
+    </section>
+    <div class="side">
+      <section class="sec" id="bids-panel" aria-live="polite"></section>
+    </div>
+  </main>
+</div>
+
+<dialog id="join" aria-labelledby="join-title">
+  <div class="offer" id="join-body"></div>
+</dialog>
+
+<dialog id="offer" aria-labelledby="offer-title">
+  <div class="offer" id="offer-body"></div>
+</dialog>
+
+<dialog id="wallet" aria-labelledby="wallet-title">
+  <div class="offer" id="wallet-body"></div>
+</dialog>
+
+<script>
+  // Скрипт Telegram подключаем только внутри Telegram: в обычном браузере и предпросмотре он не нужен
+  (function(){
+    var inTg = /tgWebApp/.test(location.hash) || !!window.TelegramWebviewProxy;
+    try { inTg = inTg || !!sessionStorage.getItem('__telegram__initParams'); } catch (e) {}
+    if (inTg) document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>');
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2.1.0/dist/tonconnect-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.18.3/dist/livekit-client.umd.min.js"></script>
+<script src="config.js"></script>
+<script>
+// Мелкие помощники для TON без сторонних библиотек:
+// комментарий к платежу в формате BOC и короткая запись адреса кошелька.
+(function(root){
+  'use strict';
+
+  var CRC32C_TABLE = (function(){
+    var t = new Uint32Array(256);
+    for (var i = 0; i < 256; i++){
+      var c = i;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0x82F63B78 ^ (c >>> 1)) : (c >>> 1);
+      t[i] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32c(bytes){
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = CRC32C_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function crc16(bytes){              // CRC-16/XMODEM, им заверяют адреса TON
+    var crc = 0;
+    for (var i = 0; i < bytes.length; i++){
+      crc ^= bytes[i] << 8;
+      for (var k = 0; k < 8; k++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+    return crc;
+  }
+  function utf8(s){
+    if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(s);
+    return Uint8Array.from(Buffer.from(s, 'utf8'));
+  }
+  function toBase64(bytes){
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return typeof btoa !== 'undefined' ? btoa(s) : Buffer.from(bytes).toString('base64');
+  }
+
+  // Текстовый комментарий к переводу: ячейка из 32 нулевых бит и текста, упакованная в BOC с CRC32C.
+  // Помещается до 123 байт текста — нам хватает.
+  function commentPayload(text){
+    var t = utf8(text);
+    if (t.length > 123) throw new Error('Комментарий слишком длинный');
+    var data = new Uint8Array(4 + t.length);
+    data.set(t, 4);
+    var cell = new Uint8Array(2 + data.length);
+    cell[0] = 0;                       // нет ссылок, обычная ячейка
+    cell[1] = data.length * 2;         // длина в целых байтах, без хвоста
+    cell.set(data, 2);
+    var head = [0xB5, 0xEE, 0x9C, 0x72, 0x41, 0x01, 0x01, 0x01, 0x00, cell.length, 0x00];
+    var body = new Uint8Array(head.length + cell.length);
+    body.set(head, 0);
+    body.set(cell, head.length);
+    var crc = crc32c(body);
+    var out = new Uint8Array(body.length + 4);
+    out.set(body, 0);
+    out[body.length] = crc & 0xFF;
+    out[body.length + 1] = (crc >>> 8) & 0xFF;
+    out[body.length + 2] = (crc >>> 16) & 0xFF;
+    out[body.length + 3] = (crc >>> 24) & 0xFF;
+    return toBase64(out);
+  }
+
+  // «0:abcd…» → «UQ…»: так адрес показывают кошельки
+  function friendly(raw, bounceable){
+    var m = /^(-?\d+):([0-9a-fA-F]{64})$/.exec(String(raw || ''));
+    if (!m) return String(raw || '');
+    var b = new Uint8Array(36);
+    b[0] = bounceable ? 0x11 : 0x51;
+    b[1] = Number(m[1]) === -1 ? 0xFF : Number(m[1]) & 0xFF;
+    for (var i = 0; i < 32; i++) b[2 + i] = parseInt(m[2].substr(i * 2, 2), 16);
+    var c = crc16(b.subarray(0, 34));
+    b[34] = c >> 8; b[35] = c & 0xFF;
+    return toBase64(b).replace(/\+/g, '-').replace(/\//g, '_');
+  }
+  function short(addr){ var f = friendly(addr); return f.length > 12 ? f.slice(0, 4) + '…' + f.slice(-4) : f; }
+  function toNano(amount){ return String(Math.round(Number(amount) * 1e9)); }
+
+  var Ton = {commentPayload: commentPayload, friendly: friendly, short: short, toNano: toNano};
+  if (typeof module !== 'undefined' && module.exports) module.exports = Ton; else root.Ton = Ton;
+})(this);
+
+</script>
+<script>
+// Общая часть приложений Giftly: Telegram, Supabase, кошелёк TON и отрисовка лота, цены, времени, ставок и прогноза.
+(function(){
+  'use strict';
+  var App = window.App = {st: null, me: null, skew: null, watching: 1, loaded: false, error: '', tgError: '', wallet: null, walletBalance: null};
+  var cfg = window.GIFTLY || {}, sb = null, channel = null, onChange = function(){};
+  var refreshing = false, again = false, closing = 0, readyDone;
+  App.ready = new Promise(function(r){ readyDone = r; });   // вход и привязка Telegram завершены
+
+  App.$ = function(id){ return document.getElementById(id); };
+  var $ = App.$;
+  App.esc = function(v){ return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var esc = App.esc;
+  App.fmt = function(n){
+    n = Number(n) || 0;
+    return n.toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+  };
+  App.money = function(n){ return App.fmt(n) + ' GRAM'; };
+  function clock(sec){
+    sec = Math.max(0, sec);
+    return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  }
+  // Перерисовываем блок, только если его разметка изменилась: так фокус не сбрасывается
+  App.set = function(el, html){
+    if (el.__h === html) return;
+    var hadFocus = el.contains(document.activeElement);
+    el.innerHTML = html;
+    el.__h = html;
+    if (hadFocus){
+      var b = el.querySelector('button:not(:disabled)');
+      if (b) b.focus(); else if (el.tabIndex === -1) el.focus();
+    }
+  };
+  var set = App.set;
+  App.openDialog = function(id){ var d = $(id); if (!d.open){ try { d.showModal(); } catch (e) { d.setAttribute('open', ''); } } };
+  App.closeDialog = function(id){ var d = $(id); if (d.open){ try { d.close(); } catch (e) { d.removeAttribute('open'); } } };
+
+  // Хранилище, которое не падает там, где браузер его запрещает (например, в окне предпросмотра)
+  App.store = {
+    get: function(k){ try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function(k, v){ try { window.localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- Telegram ---------- */
+  var wa = window.Telegram && window.Telegram.WebApp;
+  App.tg = wa && wa.initData ? wa : null;           // null: страница открыта не из Telegram
+  if (App.tg){
+    try {
+      wa.ready(); wa.expand();
+      if (wa.setHeaderColor) wa.setHeaderColor('#0C1445');
+      if (wa.setBackgroundColor) wa.setBackgroundColor('#0C1445');
+      if (wa.disableVerticalSwipes) wa.disableVerticalSwipes();   // свайп вниз не закроет приложение посреди торгов
+    } catch (e) {}
+  }
+  App.haptic = function(kind){ try { if (App.tg && wa.HapticFeedback) wa.HapticFeedback.notificationOccurred(kind || 'success'); } catch (e) {} };
+
+  /* ---------- состояние ---------- */
+  App.lot = function(){ var s = App.st; return s ? s.lot : null; };
+  App.top = function(){ var s = App.st; return s && s.bids.length ? s.bids[s.bids.length - 1] : null; };
+  // Округляем до нанограмма: 0,7 + 0,1 в JavaScript даёт 0,7999…
+  App.nextAmount = function(){ var t = App.top(), l = App.lot(); return t ? Math.round((t.a + l.step) * 1e9) / 1e9 : l.startPrice; };
+  App.serverNow = function(){ return Date.now() + (App.skew || 0); };
+  App.remainingMs = function(){ var s = App.st; return s && s.phase === 'live' ? Math.max(0, s.endsAt - App.serverNow()) : 0; };
+  App.voteOpen = function(){ var s = App.st; return !!s && (s.phase === 'intro' || (s.phase === 'live' && App.serverNow() < s.voteEndsAt)); };
+  App.joined = function(){ return !!(App.me && App.me.role); };
+
+  /* ---------- связь с Supabase ---------- */
+  function storage(){
+    try { localStorage.setItem('giftly-probe', '1'); localStorage.removeItem('giftly-probe'); return localStorage; }
+    catch (e) { return undefined; }
+  }
+  // Вызов функции в базе. Всегда отвечает {ok, data} или {ok:false, error}
+  App.rpc = function(name, args){
+    if (App.demo) return Promise.resolve(demoRpc(name, args || {}));
+    return sb.rpc(name, args || {}).then(
+      function(r){ return r.error ? {ok: false, error: r.error.message || 'Ошибка сервера'} : {ok: true, data: r.data}; },
+      function(){ return {ok: false, error: 'Нет связи с сервером'}; });
+  };
+  // Вызов серверной функции giftly (Telegram, кошелёк, видео, проверка оплат)
+  App.fn = function(action, body){
+    if (App.demo) return Promise.resolve({ok: false, error: 'Демо-режим'});
+    var payload = Object.assign({action: action}, body || {});
+    return sb.functions.invoke('giftly', {body: payload}).then(function(r){
+      if (r.error) return {ok: false, error: 'Серверная функция недоступна'};
+      if (r.data && r.data.error) return {ok: false, error: r.data.error};
+      return {ok: true, data: r.data};
+    }, function(){ return {ok: false, error: 'Нет связи с сервером'}; });
+  };
+  function apply(d){
+    if (!d || !d.pub) return;
+    var sample = d.pub.now - Date.now();               // разница часов с сервером минус задержка ответа
+    if (App.skew === null || sample > App.skew) App.skew = sample;
+    App.st = d.pub; App.me = d.me || null; App.loaded = true; App.error = '';
+    onChange();
+  }
+  App.refresh = function(){
+    if (!sb && !App.demo) return Promise.resolve();
+    if (refreshing){ again = true; return Promise.resolve(); }
+    refreshing = true;
+    return App.rpc('giftly_state').then(function(r){
+      refreshing = false;
+      if (r.ok) apply(r.data); else { App.error = r.error; onChange(); }
+      if (again){ again = false; return App.refresh(); }
+    });
+  };
+  // Действие и сразу свежее состояние
+  App.act = function(name, args){
+    return App.rpc(name, args).then(function(r){
+      if (!r.ok) App.toast(r.error);
+      return App.refresh().then(function(){ return r; });
+    });
+  };
+  // Сервера с таймером нет: когда время лота вышло или наступило время старта по расписанию,
+  // просим базу сделать тик. База сама сверяет часы, лишний вызов безвреден
+  function autoClose(){
+    var s = App.st;
+    if ((App.demo && !(D && D.host)) || !s || Date.now() < closing) return;
+    var due = s.phase === 'live' ? App.serverNow() >= s.endsAt : !!s.nextStart && App.serverNow() >= s.nextStart;
+    if (!due) return;
+    closing = Date.now() + 1500;
+    App.rpc('giftly_tick').then(App.refresh);
+  }
+  App.start = function(opts, cb){
+    onChange = cb;
+    if (!window.supabase || !cfg.url || !cfg.key || cfg.url.indexOf('http') !== 0){
+      if (opts.demo) return startDemo(opts.demo);
+      App.error = 'В config.js не указан адрес проекта Supabase';
+      cb();
+      readyDone(false);
+      return Promise.resolve(false);
+    }
+    sb = window.supabase.createClient(cfg.url, cfg.key, {auth: opts.login
+      ? {storage: storage(), storageKey: 'giftly-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false}
+      : {persistSession: false, autoRefreshToken: false, detectSessionInUrl: false}});
+    var login = !opts.login ? Promise.resolve(true) : sb.auth.getSession().then(function(r){
+      if (r.data && r.data.session) return true;
+      return sb.auth.signInAnonymously().then(function(x){
+        if (x.error){ App.error = 'Гостевой вход выключен в Supabase'; return false; }
+        return true;
+      });
+    }).catch(function(){ App.error = 'Нет связи с сервером'; return false; });
+    return login.then(function(ok){
+      // Из Telegram: сервер проверяет подпись и привязывает аккаунт к этому входу
+      var linked = (ok && opts.login && App.tg) ? App.fn('tg', {initData: App.tg.initData}).then(function(r){
+        if (!r.ok) App.tgError = r.error;
+      }) : Promise.resolve();
+      channel = sb.channel('giftly-live');
+      channel
+        .on('postgres_changes', {event: '*', schema: 'public', table: 'giftly_pulse'}, function(){ App.refresh(); })
+        .on('presence', {event: 'sync'}, function(){
+          App.watching = Math.max(1, Object.keys(channel.presenceState()).length);
+          onChange();
+        })
+        .subscribe(function(status){
+          if (status === 'SUBSCRIBED'){ channel.track({at: Date.now()}); App.refresh(); }
+        });
+      setInterval(App.refresh, 4000);                  // страховка, если живой канал не доставил изменение
+      setInterval(autoClose, 500);
+      // первая загрузка отдельным запросом: обычное обновление может вернуться раньше, пока идёт другое
+      var first = linked.then(function(){ return App.rpc('giftly_state'); }).then(function(r){
+        if (r.ok) apply(r.data); else { App.error = r.error; onChange(); }
+        if (!App.st && opts.demo) return startDemo(opts.demo);   // сервер не ответил: показываем, как выглядит эфир
+        readyDone(ok); return ok;
+      });
+      if (!opts.demo) return first;
+      // если сервер молчит дольше 6 секунд, тоже включаем демо
+      return Promise.race([first, new Promise(function(r){ setTimeout(function(){ r(App.st ? ok : startDemo(opts.demo)); }, 6000); })]);
+    });
+  };
+
+  /* ---------- кошелёк TON (TON Connect) ---------- */
+  var tc = null, walletSync = null;
+  // Сообщаем серверу адрес; он сам узнаёт баланс в блокчейне
+  App.syncWallet = function(){
+    if (!tc || !tc.account) return Promise.resolve({ok: false, error: 'Кошелёк не подключён'});
+    if (walletSync) return walletSync;
+    walletSync = App.ready.then(function(ok){
+      return ok ? App.fn('wallet', {address: tc.account.address}) : {ok: false, error: App.error || 'Нет входа'};
+    }).then(function(r){
+      walletSync = null;
+      if (r.ok) App.walletBalance = r.data.walletBalance; else App.toast(r.error);
+      return App.refresh().then(function(){ return r; });
+    });
+    return walletSync;
+  };
+  App.initWallet = function(onStatus, opts){
+    var sync = !(opts && opts.sync === false);
+    if (!window.TON_CONNECT_UI){ App.walletError = 'Не загрузился TON Connect'; return null; }
+    if (tc) return tc;
+    try { tc = new window.TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: (cfg.site || location.origin) + '/tonconnect-manifest.json',
+      language: 'ru',
+      actionsConfiguration: App.tg && cfg.playLink ? {twaReturnUrl: /watch/.test(location.pathname) ? cfg.watchLink : cfg.playLink} : {}
+    }); } catch (e) { tc = null; App.walletError = 'Кошелёк здесь недоступен'; return null; }
+    tc.onStatusChange(function(w){
+      App.wallet = w ? w.account.address : null;
+      if (w && sync) App.syncWallet();
+      if (onStatus) onStatus(w);
+    }, function(){});
+    return tc;
+  };
+  App.connectWallet = function(){ if (tc) tc.openModal(); };
+  App.disconnectWallet = function(){ if (tc) tc.disconnect(); };
+  // Перевод в GRAM с комментарием. Адрес «0:…» превращаем в «UQ…»: так его принимают все кошельки
+  App.send = function(to, amount, comment){
+    if (!tc || !tc.connected){ App.connectWallet(); return Promise.reject(new Error('Сначала подключите кошелёк')); }
+    var addr = /^-?\d+:[0-9a-fA-F]{64}$/.test(to) ? window.Ton.friendly(to, false) : to;
+    return tc.sendTransaction({
+      validUntil: Math.floor(Date.now() / 1000) + 600,
+      messages: [{address: addr, amount: window.Ton.toNano(amount), payload: window.Ton.commentPayload(comment)}]
+    });
+  };
+
+
+  /* ---------- демо-режим ----------
+     Включается, когда страница открыта без сервера (например, файл в предпросмотре).
+     Показывает эфир до старта: лот, пустые вебки «In progress…». Никаких выдуманных игроков и ставок. */
+  var D = null;
+  function demoState(){
+    return {pub: {now: Date.now(), lot: D.lot, lotCount: 1, round: 1, lotIndex: 0, phase: 'intro', endsAt: 0, voteEndsAt: 0, nextStart: null,
+      bids: [], bidCount: 0, roster: D.roster, tally: {}, top: [], payReady: false, result: null, prize: 0}, me: D.me};
+  }
+  function demoRpc(name, a){
+    if (D.host) return demoHost(name, a);
+    if (name === 'giftly_state') return {ok: true, data: demoState()};
+    return {ok: false, error: 'Эфир ещё не начался'};
+  }
+  // Демо ведущего: подарки, выбор, старт и таймер работают на этой странице, без сохранения
+  function demoHost(name, a){
+    var sh = D.show, now = Date.now();
+    function lot(i){ return D.lots.filter(function(l){ return l.idx === i; })[0] || null; }
+    function start(l){ sh.lotIndex = l.idx; sh.phase = 'live'; sh.endsAt = now + l.duration * 1000; l.played = true; }
+    if (name === 'giftly_is_host') return {ok: true, data: true};
+    if (name === 'giftly_host_lots') return {ok: true, data: JSON.parse(JSON.stringify(D.lots))};
+    if (name === 'giftly_host_board') return {ok: true, data: {wallet: sh.wallet, offers: [], payouts: [], deposits: [], withdrawals: [], held: 0}};
+    if (name === 'giftly_tick'){
+      if (sh.phase === 'live' && now >= sh.endsAt){ sh.phase = 'sold'; return {ok: true, data: true}; }
+      var due = D.lots.filter(function(l){ return !l.played && l.startsAt && l.startsAt <= now; })[0];
+      if (sh.phase !== 'live' && due){ if (sh.phase === 'sold') sh.round++; start(due); }
+      return {ok: true, data: !!due};
+    }
+    if (name === 'giftly_state'){
+      var cur = lot(sh.lotIndex), next = D.lots.filter(function(l){ return !l.played && l.startsAt; })
+        .map(function(l){ return l.startsAt; }).sort()[0] || null;
+      return {ok: true, data: {pub: {now: now, lot: cur, lotCount: D.lots.length, round: sh.round, lotIndex: sh.lotIndex, phase: sh.phase,
+        endsAt: sh.endsAt, voteEndsAt: 0, nextStart: next, bids: [], bidCount: 0, roster: {}, tally: {}, top: [], payReady: !!sh.wallet,
+        result: sh.phase === 'sold' ? {winner: null, price: 0} : null, prize: 0}, me: null}};
+    }
+    if (name !== 'giftly_host') return {ok: true, data: null};
+    var act = a.p_action, arg = a.p_arg;
+    if (act === 'lot_save'){
+      var p = JSON.parse(arg), l = p.idx !== undefined ? lot(p.idx) : null;
+      if (l && sh.phase === 'live' && sh.lotIndex === l.idx) return {ok: false, error: 'Этот подарок сейчас в эфире'};
+      var v = {name: p.name, art: p.art || '', startPrice: p.startPrice, step: p.step, duration: p.duration, prize: 0,
+               startsAt: p.startsAt ? Date.parse(p.startsAt) : null};
+      if (l){ if (v.startsAt && v.startsAt !== l.startsAt && v.startsAt > now) l.played = false; Object.assign(l, v); }
+      else { v.idx = D.lots.length ? Math.max.apply(null, D.lots.map(function(x){ return x.idx; })) + 1 : 0; v.played = false;
+             D.lots.push(v); if (!lot(sh.lotIndex)) sh.lotIndex = v.idx; }
+    } else if (act === 'lot_delete'){
+      var i = Number(arg);
+      if (sh.phase === 'live' && sh.lotIndex === i) return {ok: false, error: 'Этот подарок сейчас в эфире'};
+      D.lots = D.lots.filter(function(x){ return x.idx !== i; });
+      if (sh.lotIndex === i) sh.lotIndex = D.lots.length ? D.lots[0].idx : 0;
+    } else if (act === 'pick' && sh.phase === 'intro'){ sh.lotIndex = Number(arg); }
+    else if (act === 'start' && sh.phase === 'intro' && lot(sh.lotIndex)){ start(lot(sh.lotIndex)); }
+    else if (act === 'next' && sh.phase === 'sold'){
+      var rest = D.lots.filter(function(x){ return !x.played; });
+      sh.round++; sh.phase = 'intro'; sh.endsAt = 0; sh.lotIndex = rest.length ? rest[0].idx : sh.lotIndex;
+    } else if (act === 'wallet'){ sh.wallet = arg; }
+    else if (act !== 'withdrawn' && act !== 'payout') return {ok: false, error: 'Сейчас это действие недоступно'};
+    return {ok: true, data: null};
+  }
+  function startDemo(role){
+    App.demo = true; App.error = '';
+    D = role === 'h' ? {host: true, lots: [], show: {phase: 'intro', lotIndex: 0, round: 1, endsAt: 0, wallet: ''}} : {
+      lot: {idx: 0, name: '', art: '', startPrice: 0.5, step: 0.1, duration: 30, prize: 0},
+      roster: {},
+      me: role === 'p'
+        ? {tg: true, nick: 'you', photo: '', wallet: null, balance: 0, role: 'p', pid: 'me', no: '01', vote: null, offer: null, won: 0,
+           deposit: null, lastDeposit: null, withdrawing: 0}
+        : {tg: true, nick: 'you', photo: '', wallet: null, balance: 0, role: 'v', pid: null, no: null, vote: null, offer: null, won: 0}
+    };
+    var bar = document.createElement('p');
+    bar.className = 'demo-bar';
+    bar.textContent = role === 'h' ? 'Демо: нет связи с сервером. Подарки и старт работают на этой странице, но не сохраняются'
+                                   : 'Демо: нет связи с сервером. Настоящий эфир откроется в Telegram';
+    document.body.insertBefore(bar, document.body.firstChild);
+    if (!App.__demoTimers){ App.__demoTimers = true; setInterval(App.refresh, 1000); setInterval(autoClose, 500); }
+    readyDone(false);
+    return App.refresh().then(function(){ return false; });
+  }
+
+  // 30 → «30 секунд», 90 → «1 мин 30 сек», 120 → «2 минуты»
+  App.duration = function(sec){
+    sec = Number(sec) || 0;
+    if (sec < 60) return sec + ' секунд';
+    var m = Math.floor(sec / 60), r = sec % 60;
+    return r ? m + ' мин ' + r + ' сек' : m + (m % 10 === 1 && m % 100 !== 11 ? ' минуту' : (m % 10 >= 2 && m % 10 <= 4 && (m % 100 < 12 || m % 100 > 14)) ? ' минуты' : ' минут');
+  };
+
+  /* ---------- всплывающая подсказка об ошибке ---------- */
+  var toastTimer = 0;
+  App.toast = function(text){
+    if (!text) return;
+    var el = $('toast');
+    if (!el){ el = document.createElement('p'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    el.textContent = text;
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('on'); }, 3800);
+  };
+
+  /* ---------- отрисовка ---------- */
+  App.giftIcon = '<svg class="gift" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Zm-1-4h18v4H3V7Zm9 0v14M12 7c-1.5-3-5-3.5-5-1.5S10 7 12 7Zm0 0c1.5-3 5-3.5 5-1.5S14 7 12 7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  // До старта игроки и зрители видят только «In progress…»: какой подарок будет, ведущий покажет стартом
+  App.showIntroLot = false;
+  App.waiting = function(){ var s = App.st; return !!s && (!s.lot || (s.phase === 'intro' && !App.showIntroLot)); };
+  App.renderLot = function(){
+    var s = App.st, l = App.lot(), t = App.top();
+    if (!s) return;
+    var wait = App.waiting();
+    $('price').hidden = wait;
+    $('clock').hidden = wait;
+    $('viewers').textContent = String(App.watching);
+    if (wait){
+      App.set($('lot'), '<p class="lot-wait" id="lot-name">' + (s.lot || !App.showIntroLot ? 'In progress<span class="dots" aria-hidden="true"></span>' : 'Добавьте подарок') + '</p>');
+      return;
+    }
+    var sold = s.phase === 'sold';
+    set($('lot'),
+      '<div class="art">' + (l.art ? '<img src="' + esc(l.art) + '" alt="Подарок ' + esc(l.name) + '">' : App.giftIcon) +
+      '<span class="pill' + (sold ? ' sold' : '') + '">' +
+      (sold ? (s.result && s.result.winner ? 'Продано' : 'Снят') : App.money(t ? t.a : l.startPrice)) + '</span></div>' +
+      '<div class="info"><h2 id="lot-name">' + esc(l.name) + '</h2></div>');
+    var label = !t ? 'Стартовая цена' : (s.phase === 'live' ? 'Текущая ставка' : 'Финальная ставка');
+    set($('price'), '<div><small>' + label + '</small><strong>' + App.fmt(t ? t.a : l.startPrice) + '<span class="unit">GRAM</span></strong></div>');
+    $('viewers').textContent = String(App.watching);
+  };
+  App.renderClock = function(){
+    var s = App.st;
+    if (!s) return;
+    var sec = s.phase === 'intro' ? (s.lot ? s.lot.duration : 0) : Math.ceil(App.remainingMs() / 1000);
+    $('clock').textContent = clock(sec);
+    $('clock').className = 'clock' + (s.phase === 'live' && sec < 10 ? ' hot' : '');
+  };
+  // Лента ставок: номер, ник и сумма; ведущая ставка оранжевая
+  App.renderBids = function(){
+    var s = App.st;
+    if (!s || !s.bids.length){ set($('bids-panel'), ''); return; }
+    var rows = s.bids.slice(-8).reverse();
+    set($('bids-panel'), '<h3>Ставки</h3><ul class="bids">' + rows.map(function(b, i){
+      var e = s.roster[b.u] || {no: '?', nick: ''};
+      return '<li' + (i === 0 ? ' class="lead"' : '') + '><span class="no">' + esc(e.no) + '</span>' +
+        '<span class="who">@' + esc(e.nick) + '</span><span class="sum">' + App.money(b.a) + '</span></li>';
+    }).join('') + '</ul>');
+  };
+  function rosterKeys(){
+    var r = App.st.roster;
+    return Object.keys(r).sort(function(a, b){ return Number(r[a].no) - Number(r[b].no); });
+  }
+  // Прогноз: только номера и доли; шкала выбранного номера оранжевая, у победителя крупнее
+  App.renderPredict = function(el, title, voting, note){
+    var s = App.st;
+    if (!s) return;
+    var keys = rosterKeys(), myPick = App.me ? App.me.vote : null;
+    if (!keys.length){ set(el, ''); return; }
+    set(el, '<div class="head"><h3>' + title + '</h3><span class="accent">Приз ' + App.money(s.prize) + '</span></div>' +
+      (note ? '<p class="note">' + esc(note) + '</p>' : '') +
+      '<ul class="cands">' + keys.map(function(k){
+        var no = esc(s.roster[k].no);
+        return '<li><span class="no">' + no + '</span>' +
+          '<div><span class="pct"></span><div class="meter"><i></i></div></div>' +
+          (myPick === k ? '<span class="tag">ваш выбор</span>'
+            : (voting ? '<button class="btn small" id="vote-' + no + '" data-act="vote" data-k="' + esc(k) + '" aria-label="Выбрать номер ' + no + '">Выбрать</button>' : '<span></span>')) +
+          '</li>';
+      }).join('') + '</ul>');
+    var total = 0, winner = s.result ? s.result.winner : null;
+    keys.forEach(function(k){ total += s.tally[k] || 0; });
+    Array.prototype.forEach.call(el.querySelectorAll('.cands li'), function(li, i){
+      var k = keys[i], pct = total ? Math.round((s.tally[k] || 0) / total * 100) : 0;
+      li.className = (k === myPick ? 'mine ' : '') + (k === winner ? 'win' : '');
+      li.querySelector('.pct').textContent = pct + '%';
+      li.querySelector('.meter i').style.width = pct + '%';
+    });
+  };
+  App.renderPeople = function(){
+    var s = App.st;
+    if (!s) return;
+    var keys = rosterKeys();
+    if (!keys.length){ set($('people'), ''); return; }
+    set($('people'), '<h3>Участники</h3><ul class="people">' + keys.map(function(k){
+      return '<li><span class="no">' + esc(s.roster[k].no) + '</span><span class="who">@' + esc(s.roster[k].nick) + '</span></li>';
+    }).join('') + '</ul>');
+  };
+  // Пока состояние не загрузилось, показываем причину одной строкой
+  App.renderError = function(el){
+    if (!App.st && App.error){ set(el, '<p class="note">' + esc(App.error) + '</p>'); return true; }
+    return false;
+  };
+})();
+
+</script>
+<script>
+// Видео эфира через LiveKit: две вебки тех, кто поставил больше всех.
+// Зритель видит первых двух. Участник видит первых двух, не считая себя.
+// Поэтому камеру включают первые трое по ставкам (и только если сами разрешили видео).
+(function(){
+  'use strict';
+  var LK = window.LivekitClient;
+  var $ = App.$;
+  var SHOWN = 2, PUBLISH = 3;
+  var room = null, role = 'viewer', hostKey = '', remote = {}, slots = [];
+  var camAllowed = false, camOn = false, camBusy = false, status = '', closing = false, retryTimer = 0, myId = '';
+
+  // Подключаем дорожку к элементу video, только если она сменилась
+  function attach(el, track){
+    if (el.__track === track) return;
+    if (el.__track){ try { el.__track.detach(el); } catch (e) {} }
+    el.__track = track || null;
+    if (track) track.attach(el);
+    el.parentNode.classList.toggle('on', !!track);
+  }
+
+  function build(){
+    var list = $('cams');
+    list.innerHTML = '';
+    slots = [];
+    for (var i = 0; i < SHOWN; i++){
+      var li = document.createElement('li');
+      li.className = 'cam empty';
+      li.innerHTML = '<video playsinline muted autoplay></video>' +
+        '<span class="ph"><span class="bg"></span><span class="ava"></span></span>' +
+        '<span class="wait">In progress<span class="dots" aria-hidden="true"></span></span>' +
+        '<span class="cap"><b class="rank"></b><span class="who"></span><span class="sum"></span></span>';
+      list.appendChild(li);
+      slots.push({li: li, video: li.querySelector('video'), bg: li.querySelector('.bg'), ava: li.querySelector('.ava'),
+                  rank: li.querySelector('.rank'), who: li.querySelector('.who'), sum: li.querySelector('.sum'), photo: null});
+    }
+  }
+
+  // Кого показывать: лидеры по ставкам; участнику — без него самого
+  function shown(){
+    var s = App.st, top = s && s.top && s.phase !== 'intro' ? s.top : [];
+    return top.map(function(t, i){ return {u: t.u, a: t.a, place: i + 1}; })
+      .filter(function(t){ return t.u !== myId; }).slice(0, SHOWN);
+  }
+
+  function paint(){
+    var s = App.st, list = shown();
+    slots.forEach(function(sl, i){
+      var t = list[i], who = t && s.roster[t.u] ? s.roster[t.u] : null;
+      sl.li.classList.toggle('empty', !who);
+      sl.li.classList.toggle('lead', !!t && t.place === 1);
+      sl.rank.textContent = t ? String(t.place) : '';
+      sl.who.textContent = who ? '@' + who.nick : '';
+      sl.sum.textContent = t ? App.money(t.a) : '';
+      var photo = who ? who.photo || '' : '';
+      if (sl.photo !== photo){
+        sl.photo = photo;
+        sl.bg.style.backgroundImage = photo ? 'url("' + photo.replace(/"/g, '%22') + '")' : '';
+        sl.ava.style.backgroundImage = sl.bg.style.backgroundImage;
+      }
+      sl.ava.textContent = who && !photo ? (who.nick.charAt(0) || '?').toUpperCase() : '';
+      attach(sl.video, t ? remote['p:' + t.u] || null : null);
+      sl.li.setAttribute('aria-label', who ? 'Место ' + t.place + ': @' + who.nick + ', ' + App.money(t.a) : 'Ожидание');
+    });
+    var note = $('cam-status');
+    if (note) note.textContent = App.demo ? '' : status;
+  }
+
+  // Камера участника: включена, только пока он в тройке лидеров и сам разрешил видео
+  function syncCam(){
+    if (role !== 'player' || !room || camBusy) return;
+    var s = App.st, top = s && s.top && s.phase !== 'intro' ? s.top : [];
+    var place = top.map(function(t){ return t.u; }).indexOf(myId);
+    var want = camAllowed && !!myId && place >= 0 && place < PUBLISH;
+    if (want === camOn) return;
+    camBusy = true;
+    room.localParticipant.setCameraEnabled(want).then(function(){ camOn = want; }, function(){
+      camOn = false; camAllowed = false;
+      App.toast('Камера недоступна. Разрешите её в настройках Telegram');
+    }).then(function(){ camBusy = false; paint(); syncCam(); });
+  }
+
+  function wire(r){
+    var E = LK.RoomEvent;
+    r.on(E.TrackSubscribed, function(track, pub, p){
+      if (track.kind === 'video'){ remote[p.identity] = track; paint(); }
+    });
+    r.on(E.TrackUnsubscribed, function(track, pub, p){
+      if (track.kind === 'video' && remote[p.identity] === track){ delete remote[p.identity]; paint(); }
+    });
+    [E.TrackMuted, E.TrackUnmuted, E.ParticipantDisconnected].forEach(function(ev){ r.on(ev, paint); });
+    r.on(E.Disconnected, function(){
+      if (room !== r) return;
+      room = null; remote = {}; camOn = false;
+      if (!closing){ status = 'Видео прервалось, переподключаемся…'; retry(); }
+      paint();
+    });
+  }
+  function retry(){ clearTimeout(retryTimer); retryTimer = setTimeout(connect, 3000); }
+
+  function connect(){
+    if (App.demo) return Promise.resolve();
+    if (!LK){ status = 'Видео не загрузилось'; paint(); return Promise.resolve(); }
+    if (room) return Promise.resolve();
+    closing = false;
+    return App.fn('video', hostKey ? {hostKey: hostKey} : {}).then(function(r){
+      if (!r.ok){ status = r.error; paint(); if (!/не настроено|ключ/.test(r.error)) retry(); return; }
+      var rm = new LK.Room({adaptiveStream: true, dynacast: true,
+        videoCaptureDefaults: {resolution: LK.VideoPresets.h360.resolution, facingMode: 'user'}});
+      room = rm;
+      wire(rm);
+      return rm.connect(r.data.url, r.data.token).then(function(){
+        status = '';
+        paint();
+        syncCam();
+      }, function(){
+        if (room === rm) room = null;
+        status = 'Видео недоступно, пробуем ещё раз…';
+        paint();
+        retry();
+      });
+    });
+  }
+
+  window.Video = {
+    // role: 'host' | 'player' | 'viewer'
+    init: function(opts){
+      role = opts.role; hostKey = opts.hostKey || '';
+      build();
+      paint();
+    },
+    connect: connect,
+    // Новый пропуск в комнату, например после входа участником
+    reconnect: function(){
+      clearTimeout(retryTimer);
+      if (room){ closing = true; var r = room; room = null; remote = {}; camOn = false; r.disconnect(); }
+      return connect();
+    },
+    // Вызывается при каждом обновлении эфира
+    update: function(){
+      myId = App.me && App.me.role === 'p' ? App.me.pid : '';
+      paint();
+      syncCam();
+    },
+    allowCam: function(on){ camAllowed = !!on; syncCam(); },
+    camOn: function(){ return camOn; }
+  };
+})();
+
+</script>
+<script>
+// Приложение участника: вход через Telegram, кошелёк TON и игровой баланс в GRAM,
+// кнопка ставки, камера среди лидеров и покупка выигранного лота с баланса.
+(function(){
+  'use strict';
+  var $ = App.$, esc = App.esc, cfg = window.GIFTLY || {};
+  var pend = 0, started = false, joining = false, walletOpen = false, verifyAt = 0, offerBusy = false;
+  var camChoice = App.store.get('giftly-cam') !== '0';
+  var amount = App.store.get('giftly-dep-amount') || '5';
+  // Пополнение: sending — ждём подтверждения в кошельке, waiting — ждём перевод в сети
+  var dep = {sending: false, waiting: false, msg: '', good: false, seen: null};
+  var bought = null;            // купленный лот: показываем «Куплено»
+
+  function money(n){ return App.money(n); }
+  function canBid(){
+    var s = App.st, me = App.me, t = App.top();
+    return !!(s && me && me.role === 'p' && s.phase === 'live' && App.remainingMs() > 0 && !(t && t.u === me.pid) &&
+              me.balance >= App.nextAmount() && Date.now() > pend);
+  }
+  function renderAction(){
+    var s = App.st, me = App.me, html = '';
+    if (App.renderError($('action'))) return;
+    if (s && me && me.role === 'p' && s.phase === 'live'){
+      var need = App.nextAmount();
+      if (me.balance < need)
+        html = '<button class="btn big" data-act="open-wallet">Пополнить баланс</button>';
+      else
+        html = '<button class="btn big" id="act-bid" data-act="bid" aria-label="Поставить ' + money(need) + '"' +
+          (canBid() ? '' : ' disabled') + '>' + money(need) + '</button>';
+    }
+    App.set($('action'), html);
+  }
+
+  // Правый верхний угол: «Подключить кошелёк», а после подключения — игровой баланс
+  function renderTop(){
+    var me = App.me, chip = $('wallet-chip'), inGame = !!(me && me.role === 'p');
+    chip.hidden = !inGame;
+    if (inGame){
+      var connected = !!App.wallet && !App.demo;
+      chip.setAttribute('data-act', connected ? 'open-wallet' : 'connect');
+      chip.classList.toggle('accent', !connected);
+      App.set(chip, connected
+        ? '<span>' + money(me.balance) + '</span><span class="plus" aria-hidden="true">+</span>'
+        : 'Подключить кошелёк');
+      chip.setAttribute('aria-label', connected ? 'Баланс ' + money(me.balance) + '. Пополнить' : 'Подключить кошелёк');
+    }
+    $('onair').hidden = !Video.camOn();
+  }
+
+  // Окно входа: Telegram, кошелёк, разрешение на камеру
+  function renderJoin(){
+    var me = App.me, html;
+    if (!App.tg){
+      html = '<h3 id="join-title">Откройте Giftly в Telegram</h3><p>Торговаться можно только из мини-приложения.</p>' +
+        (cfg.playLink ? '<div class="row"><a class="btn big" href="' + esc(cfg.playLink) + '">Открыть в Telegram</a></div>' : '');
+    } else if (App.tgError){
+      html = '<h3 id="join-title">Не получилось войти</h3><p>' + esc(App.tgError) + '</p>' +
+        '<div class="row"><button class="btn big" data-act="reload">Повторить</button></div>';
+    } else if (!me || !me.tg){
+      html = '<h3 id="join-title">Входим…</h3>';
+    } else {
+      var ready = !!(App.wallet && me.wallet);
+      html = '<div class="me">' + (me.photo ? '<img class="ava" src="' + esc(me.photo) + '" alt="">' : '<span class="ava">' + esc(me.nick.charAt(0).toUpperCase()) + '</span>') +
+        '<strong id="join-title">@' + esc(me.nick) + '</strong></div>' +
+        (ready
+          ? '<p>Кошелёк ' + esc(Ton.short(me.wallet)) + ' подключён</p>' +
+            '<div class="row"><button class="btn ghost small" data-act="disconnect">Сменить кошелёк</button></div>'
+          : '<p>Подключите кошелёк TON: с него вы пополняете баланс для ставок.</p>' +
+            '<div class="row"><button class="btn big" data-act="connect">Подключить кошелёк</button></div>') +
+        '<label class="check"><input type="checkbox" id="cam-ok"' + (camChoice ? ' checked' : '') + '>' +
+        '<span>Показывать меня на видео, когда я среди лидеров</span></label>' +
+        '<div class="row"><button class="btn big" data-act="join"' + (ready && !joining ? '' : ' disabled') + '>Войти</button></div>';
+    }
+    App.set($('join-body'), html);
+  }
+
+  // Окно баланса: пополнить с кошелька или вывести обратно
+  function renderWallet(){
+    var me = App.me, html = '';
+    if (walletOpen && me && me.role === 'p'){
+      var wb = App.walletBalance;
+      html = '<h3 id="wallet-title">Баланс в игре</h3>' +
+        '<p class="bal">' + money(me.balance) + '</p>' +
+        '<p class="note">Кошелёк <span class="nowrap">' + esc(Ton.short(me.wallet || App.wallet || '')) + '</span>' +
+          (wb !== null && wb !== undefined ? ', на нём ' + money(wb) : '') + '</p>' +
+        '<label class="amount"><span>Сколько пополнить</span>' +
+          '<span class="amount-field"><input id="dep-amount" inputmode="decimal" autocomplete="off"><b>GRAM</b></span></label>' +
+        '<div class="row quick">' + ['1', '5', '10'].map(function(v){
+          return '<button class="chip" data-act="amount" data-v="' + v + '">' + v + '</button>';
+        }).join('') + '</div>' +
+        '<p class="status' + (dep.good ? ' good' : '') + '" role="status">' + esc(dep.msg) + '</p>' +
+        '<div class="row"><button class="btn big" data-act="deposit"' + (dep.sending ? ' disabled' : '') + '>' +
+          (dep.sending ? 'Подтвердите в кошельке' : 'Пополнить') + '</button></div>' +
+        (me.withdrawing > 0 ? '<p class="note">На выводе ' + money(me.withdrawing) + ': ведущий переведёт их на ваш кошелёк</p>' : '') +
+        '<div class="row">' +
+          (me.balance > 0 ? '<button class="btn small ghost" data-act="withdraw">Вывести ' + money(me.balance) + '</button>' : '') +
+          '<button class="btn small ghost" data-act="disconnect">Сменить кошелёк</button>' +
+          '<button class="btn small ghost" data-act="close-wallet">Закрыть</button></div>';
+    }
+    App.set($('wallet-body'), html);
+    var inp = $('dep-amount');                 // поле суммы не перерисовываем, пока человек печатает
+    if (inp && document.activeElement !== inp && inp.value !== amount) inp.value = amount;
+    if (html) App.openDialog('wallet'); else App.closeDialog('wallet');
+  }
+
+  // Окно победителя: купить с баланса или отказаться
+  function renderOffer(){
+    var o = App.me && App.me.offer, html = '';
+    if (o && o.answer === null){
+      var short = App.me.balance < o.price;
+      html = '<h3 id="offer-title">Поздравляем, вы победили</h3><p>Купить ' + esc(o.lot) + ' за ' + money(o.price) + '?</p>' +
+        '<p class="note">' + (short ? 'На балансе ' + money(App.me.balance) + ', пополните его' : 'Сумма спишется с баланса') + '</p>' +
+        '<div class="row">' + (short ? '<button class="btn big" data-act="open-wallet">Пополнить</button>'
+                                     : '<button class="btn big" data-act="accept"' + (offerBusy ? ' disabled' : '') + '>Купить</button>') +
+        '<button class="btn big ghost" data-act="decline">Отказаться</button></div>';
+    } else if (bought){
+      html = '<h3 id="offer-title">Куплено</h3><p>' + esc(bought.lot) + ' за ' + money(bought.price) + '. Ведущий передаст подарок вам в Telegram.</p>' +
+        '<div class="row"><button class="btn big" data-act="bought-ok">Готово</button></div>';
+    }
+    App.set($('offer-body'), html);
+    if (html && !walletOpen) App.openDialog('offer'); else App.closeDialog('offer');
+  }
+
+  // Новое зачисление: показываем сумму
+  function watchDeposits(){
+    var me = App.me;
+    if (!me || !App.loaded) return;
+    var last = me.lastDeposit, id = last ? last.id : 0;
+    if (dep.seen === null){ dep.seen = id; return; }      // первая загрузка: старые зачисления не показываем
+    if (id !== dep.seen){
+      dep.seen = id; dep.waiting = false; dep.good = true;
+      dep.msg = 'Зачислено ' + money(last.amount);
+      App.haptic('success');
+    }
+  }
+  // Пока перевод в пути, просим сервер проверить блокчейн раз в 6 секунд
+  function verifyLoop(){
+    var d = App.me && App.me.deposit;
+    if (!d || !App.store.get('giftly-dep-' + d.code) || Date.now() - verifyAt < 6000) return;
+    verifyAt = Date.now();
+    App.fn('verify').then(App.refresh);
+  }
+
+  function render(){
+    renderAction();
+    Video.update();
+    if (!App.st) return;
+    App.renderLot();
+    App.renderClock();
+    App.renderBids();
+    watchDeposits();
+    var me = App.me;
+    if (me && me.deposit && App.store.get('giftly-dep-' + me.deposit.code) && !dep.sending && !dep.good){
+      dep.waiting = true; dep.msg = 'Ждём перевод в сети, обычно меньше минуты';
+    }
+    renderTop();
+    renderJoin();
+    if (started && App.loaded && !(me && me.role === 'p')) App.openDialog('join'); else App.closeDialog('join');
+    renderWallet();
+    renderOffer();
+    verifyLoop();
+  }
+
+  function askCamera(){
+    if (!camChoice) return Promise.resolve(false);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve(false);
+    return navigator.mediaDevices.getUserMedia({video: {facingMode: 'user'}}).then(function(stream){
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      return true;
+    }, function(){ return false; });
+  }
+  function join(){
+    joining = true; render();
+    askCamera().then(function(cam){
+      if (camChoice && !cam) App.toast('Камера недоступна: вместо видео будет ваше фото');
+      Video.allowCam(cam);
+      return App.act('giftly_join', {p_role: 'p'});
+    }).then(function(r){
+      joining = false;
+      if (r.ok){ App.haptic('success'); Video.reconnect(); }
+      render();
+    });
+  }
+  // Пополнение: сервер выдаёт метку, кошелёк переводит GRAM ведущему с этой меткой
+  function deposit(){
+    var v = Number(String(amount).replace(',', '.'));
+    if (!(v >= 0.01)){ dep.msg = 'Укажите сумму от 0,01 GRAM'; dep.good = false; render(); return; }
+    if (App.walletBalance !== null && App.walletBalance !== undefined && v > App.walletBalance){
+      dep.msg = 'На кошельке только ' + money(App.walletBalance); dep.good = false; render(); return;
+    }
+    dep.sending = true; dep.good = false; dep.msg = ''; render();
+    App.rpc('giftly_deposit', {p_amount: v}).then(function(r){
+      if (!r.ok) throw new Error(r.error);
+      var d = r.data;
+      return App.send(d.to, d.amount, 'Giftly-D-' + d.code).then(function(){
+        App.store.set('giftly-dep-' + d.code, '1');
+        App.store.set('giftly-dep-amount', String(v));
+        dep.sending = false; dep.waiting = true; dep.msg = 'Ждём перевод в сети, обычно меньше минуты';
+        verifyAt = Date.now();
+        return App.refresh();
+      });
+    }).catch(function(err){
+      dep.sending = false;
+      var m = String(err && err.message || '');
+      dep.msg = !m || /reject|declin|cancel|отклон|отмен/i.test(m) ? 'Пополнение отменено' : m;
+      render();
+    });
+  }
+
+  document.addEventListener('change', function(e){
+    if (e.target.id === 'cam-ok'){ camChoice = e.target.checked; App.store.set('giftly-cam', camChoice ? '1' : '0'); }
+  });
+  document.addEventListener('input', function(e){
+    if (e.target.id === 'dep-amount') amount = e.target.value;
+  });
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!b || b.disabled) return;
+    var a = b.getAttribute('data-act');
+    if (a === 'bid' && canBid()){
+      pend = Date.now() + 1500;
+      App.act('giftly_bid', {p_amount: App.nextAmount()}).then(function(r){ pend = 0; if (r.ok) App.haptic('success'); render(); });
+    }
+    else if (a === 'connect'){ if (App.demo) App.toast('В демо кошелёк не подключается'); else App.connectWallet(); }
+    else if (a === 'disconnect'){ walletOpen = false; App.disconnectWallet(); }
+    else if (a === 'join') join();
+    else if (a === 'reload') location.reload();
+    else if (a === 'open-wallet'){ walletOpen = true; dep.good = dep.good && !!dep.msg; App.syncWallet(); }
+    else if (a === 'close-wallet'){ walletOpen = false; if (!dep.waiting){ dep.msg = ''; dep.good = false; } }
+    else if (a === 'amount'){ amount = b.getAttribute('data-v'); }
+    else if (a === 'deposit') deposit();
+    else if (a === 'withdraw'){
+      b.disabled = true;
+      App.act('giftly_withdraw', {p_amount: App.me.balance}).then(function(r){
+        if (r.ok){ dep.msg = ''; App.toast('Заявка на вывод отправлена ведущему'); }
+      });
+    }
+    else if (a === 'accept'){
+      var o = App.me && App.me.offer;
+      offerBusy = true;
+      App.rpc('giftly_offer', {p_accept: true}).then(function(r){
+        offerBusy = false;
+        if (r.ok){ bought = {lot: o.lot, price: o.price}; App.haptic('success'); } else App.toast(r.error);
+        return App.refresh();
+      });
+    }
+    else if (a === 'decline') App.act('giftly_offer', {p_accept: false});
+    else if (a === 'bought-ok') bought = null;
+    render();
+  });
+  ['join', 'offer'].forEach(function(id){ $(id).addEventListener('cancel', function(e){ e.preventDefault(); }); });
+  $('wallet').addEventListener('cancel', function(e){ e.preventDefault(); walletOpen = false; render(); });
+  setInterval(function(){ App.renderClock(); renderAction(); }, 250);
+
+  Video.init({role: 'player'});
+  App.initWallet(render);
+  App.start({login: true, demo: 'p'}, render).then(function(ok){
+    started = ok;
+    if (App.me && App.me.role === 'p' && camChoice) Video.allowCam(true);
+    render();
+    if (ok) Video.connect();
+  });
+})();
+</script>
+</body>
+</html>
