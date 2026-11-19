@@ -902,7 +902,7 @@ dialog .lot-form{gap:14px}
       sl.li.setAttribute('aria-label', who ? 'Место ' + t.place + ': @' + who.nick + ', ' + App.money(t.a) : 'Ожидание');
     });
     var note = $('cam-status');
-    if (note) note.textContent = App.demo ? '' : status;
+    if (note) note.textContent = App.demo || role !== 'host' ? '' : status;
   }
 
   // Камера участника: включена, только пока он в тройке лидеров и сам разрешил видео
@@ -1144,7 +1144,8 @@ dialog .lot-form{gap:14px}
     }
     renderTop();
     renderJoin();
-    if (started && App.loaded && !(me && me.role === 'p')) App.openDialog('join'); else App.closeDialog('join');
+    // вне Telegram окно входа не показываем: страницу можно смотреть, а торговаться — из мини-приложения
+    if (started && App.loaded && App.tg && !(me && me.role === 'p')) App.openDialog('join'); else App.closeDialog('join');
     renderWallet();
     renderOffer();
     verifyLoop();

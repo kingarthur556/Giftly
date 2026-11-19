@@ -887,7 +887,7 @@ dialog .lot-form{gap:14px}
       sl.li.setAttribute('aria-label', who ? 'Место ' + t.place + ': @' + who.nick + ', ' + App.money(t.a) : 'Ожидание');
     });
     var note = $('cam-status');
-    if (note) note.textContent = App.demo ? '' : status;
+    if (note) note.textContent = App.demo || role !== 'host' ? '' : status;
   }
 
   // Камера участника: включена, только пока он в тройке лидеров и сам разрешил видео
@@ -981,7 +981,6 @@ dialog .lot-form{gap:14px}
 
   function renderTop(){
     var html = '';
-    if (!App.demo && !App.tg && cfg.watchLink) html = '<a class="chip" href="' + esc(cfg.watchLink) + '">Открыть в Telegram</a>';
     App.set($('top-right'), html);
   }
   function render(){
